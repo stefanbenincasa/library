@@ -3,11 +3,12 @@ const EventEmitter = require("node:events");
 const ReadLine = require("node:readline");
 
 class MyEmitter extends EventEmitter {}
-
 const readLine = ReadLine.createInterface({input: process.stdin, output: process.stdout})
 const myEmitter = new MyEmitter();
 
-const menus = JSON.parse(JSON.stringify(require('./menus.json'))).menus
+const menus = JSON.parse(JSON.stringify(require('./assets/data.json'))).menus
+const query = require('./assets/connection.js').query
+const waitPeriod = 3000
 
 myEmitter.on("menuChange", function() {
 	console.log("Menu Changed.")
@@ -33,7 +34,7 @@ async function mainMenu() {
 
 	// Valid input selected for Main Menu, proceed to next selected menu
 	switch(response) {
-		case 1:				console.log("You are now viewing the library"); break; // View library
+		case 1:				viewLibrary(); break; // View library
 		case 2:				break; // Create account
 		case 3:				break; // Rent book
 		case 4:				break; // View libary by popularity 
@@ -41,7 +42,39 @@ async function mainMenu() {
 		default:			throw new Error("\n\nApplication Error!\n END\n");
 	}
 }
+
 async function viewLibrary() {
+	let books = await query(`SELECT * FROM book;`)
+	let outputString = "\nThe Library\n\n"
+	let longestColumnLength = findLongestLength(books.fields)
+	let padding = 0
+	let columnAndValue = ""
+	let fields = books.fields.reverse()
+	let book = null
+	
+	for(let i = 0; i < books.rows.length; i++) {
+	  book = books.rows[i]
+
+		// Cycle through column names for current book & calculate necessary padding
+		// ERROR: Column "Category" isnt following spacing format
+
+		for(let j = 1; j < fields.length; j++) {
+			columnAndValue += fields[j].name.toUpperCase()
+			padding = longestColumnLength - fields[j].name.length	
+			for(let k = 0; k < padding; k++) columnAndValue += " "
+			columnAndValue += `\t\t\t${book[fields[j].name]}\n`
+		}
+		
+		// Append to final output & reset
+		outputString += columnAndValue + "\n"
+		columnAndValue = ""
+	}
+
+	outputString += "\n"
+	console.log(outputString)
+
+	// After N seconds return to Main Menu
+	setTimeout(() => mainMenu(), waitPeriod)
 }
 
 function run() {
@@ -52,6 +85,18 @@ function run() {
 function prompt(str) {
 	return new Promise(resolve => readLine.question(str, resolve))
 }
+
+function findLongestLength(strings) {
+	try {
+		if(!Array.isArray(strings) || strings.length === 0 || strings.some(str => str === "")) throw new Error()
+		return strings.sort().reverse()[0].length
+	}
+	catch (error) {
+		console.error(`\nError finding longest length. Returning to Main Menu...\n`)
+		mainMenu()
+	}
+}
+
 function validateInput(inputType, validInputs, input) {
 	if(inputType === 'numerical-range') {
 		let max = validInputs.sort().reverse()[0]
@@ -67,3 +112,4 @@ function validateInput(inputType, validInputs, input) {
 
 	return true 
 }
+
