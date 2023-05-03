@@ -46,29 +46,28 @@ async function mainMenu() {
 async function viewLibrary() {
 	let books = await query(`SELECT * FROM book;`)
 	let outputString = "\nThe Library\n\n"
-	let fields = books.fields.reverse().slice(1)
-	
+	let longestColumnLength = findLongestLength(books.fields)
+	let padding = 0
+	let columnAndValue = ""
+	let fields = books.fields.reverse()
 	let book = null
-	let bookLines = []
-	let temp = ""
-
+	
 	for(let i = 0; i < books.rows.length; i++) {
 	  book = books.rows[i]
 
 		// Cycle through column names for current book & calculate necessary padding
+		// ERROR: Column "Category" isnt following spacing format
 
 		for(let j = 1; j < fields.length; j++) {
-			temp = fields[j].name.toUpperCase()
-			temp += temp.padEnd(20)
-			temp += `\t\t\t${book[fields[j].name]}\n`
-			bookLines.push(temp)
-			temp = ""
+			columnAndValue += fields[j].name.toUpperCase()
+			padding = longestColumnLength - fields[j].name.length	
+			for(let k = 0; k < padding; k++) columnAndValue += " "
+			columnAndValue += `\t\t\t${book[fields[j].name]}\n`
 		}
 		
-		// Append to final output & reset for next book	
-		outputString += bookLines.join() + "\n"
-		bookLines = []
-		temp = ""
+		// Append to final output & reset
+		outputString += columnAndValue + "\n"
+		columnAndValue = ""
 	}
 
 	outputString += "\n"
