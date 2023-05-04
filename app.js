@@ -45,35 +45,39 @@ async function mainMenu() {
 
 async function viewLibrary() {
 	let books = await query(`SELECT * FROM book;`)
-	let outputString = "\nThe Library\n\n"
-	let longestColumnLength = findLongestLength(books.fields)
-	let padding = 0
-	let columnAndValue = ""
-	let fields = books.fields.reverse()
 	let book = null
-	
-	for(let i = 0; i < books.rows.length; i++) {
-	  book = books.rows[i]
+
+	let overallOutput = "\nThe Library\n\n"
+	let bookOutput = "" 
+	let bookLines = ""
+
+	let fields = books.fields
+	let longestColumnLength = fields.map(field => field.name).sort(orderByLongest)[0].length
+	let padding = 0
+
+	for(let i = 0; i < books.rows.length; i++) { 
+		book = books.rows[i]	
 
 		// Cycle through column names for current book & calculate necessary padding
-		// ERROR: Column "Category" isnt following spacing format
-
-		for(let j = 1; j < fields.length; j++) {
-			columnAndValue += fields[j].name.toUpperCase()
+		for(let j = 1; j < fields.length; j++) { // Exclude column BookID; j = 1
+			bookLines += fields[j].name.toUpperCase()
 			padding = longestColumnLength - fields[j].name.length	
-			for(let k = 0; k < padding; k++) columnAndValue += " "
-			columnAndValue += `\t\t\t${book[fields[j].name]}\n`
+			for(let k = 0; k < padding; k++) bookLines += " "
+			bookLines += `\t\t\t${book[fields[j].name]}\n`
 		}
 		
 		// Append to final output & reset
-		outputString += columnAndValue + "\n"
-		columnAndValue = ""
+		bookOutput += bookLines + "\n"
+		overallOutput += bookOutput
+		bookOutput = bookLines = ""
 	}
 
-	outputString += "\n"
-	console.log(outputString)
+	// Final & print
+	overallOutput = overallOutput.substring(0, overallOutput.length - 1)
+	console.log(overallOutput)
 
 	// After N seconds return to Main Menu
+	setTimeout(() => console.log("Returning to Main Menu..."), waitPeriod / 2)
 	setTimeout(() => mainMenu(), waitPeriod)
 }
 
@@ -86,15 +90,10 @@ function prompt(str) {
 	return new Promise(resolve => readLine.question(str, resolve))
 }
 
-function findLongestLength(strings) {
-	try {
-		if(!Array.isArray(strings) || strings.length === 0 || strings.some(str => str === "")) throw new Error()
-		return strings.sort().reverse()[0].length
-	}
-	catch (error) {
-		console.error(`\nError finding longest length. Returning to Main Menu...\n`)
-		mainMenu()
-	}
+function orderByLongest(strOne, strTwo) {
+	if(strOne.length > strTwo.length) 		return -1
+	if(strOne.length < strTwo.length) 		return 1
+	if(strOne.length === strTwo.length) 	return 0
 }
 
 function validateInput(inputType, validInputs, input) {
