@@ -34,26 +34,38 @@ async function mainMenu() {
 
 	// Valid input selected for Main Menu, proceed to next selected menu
 	switch(response) {
-		case 1:				viewLibrary(); break; // View library
+		case 1:				viewLibrary(); break; 
 		case 2:				break; // Create account
 		case 3:				break; // Rent book
-		case 4:				break; // View libary by popularity 
-		case 5:				break; // Quit
+		case 4:				viewLibrary("popularity"); break;
+		case 5:				process.exit(1); break;
 		default:			throw new Error("\n\nApplication Error!\n END\n");
 	}
 }
 
-async function viewLibrary() {
-	let books = await query(`SELECT * FROM book;`)
+async function viewLibrary(sortingMethod) {
 	let book = null
+	let books = null
 
-	let overallOutput = "\nThe Library\n\n"
+	let overallOutput = "\nThe Library"
 	let bookOutput = "" 
 	let bookLines = ""
 
-	let fields = books.fields
-	let longestColumnLength = fields.map(field => field.name).sort(orderByLongest)[0].length
+	let fields = null
+	let longestColumnLength = null
 	let padding = 0
+
+	if(sortingMethod === "popularity") {
+		overallOutput += "-> By Popularity\n\n"
+		books = await query("SELECT * FROM book ORDER BY rented DESC;") 
+	}
+	else {
+		overallOutput += "\n\n"
+		books = await query("SELECT * FROM book;")
+	}
+
+	fields = books.fields
+	longestColumnLength = fields.map(field => field.name).sort(orderByLongest)[0].length
 
 	for(let i = 0; i < books.rows.length; i++) { 
 		book = books.rows[i]	
