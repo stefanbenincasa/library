@@ -13,6 +13,10 @@ catch(error) {
 }
 
 // Functions //
+function run() {
+	mainMenu()
+}
+
 async function mainMenu() {
 	let input = null, validInput = null, mainMenuTxt = ""
 
@@ -98,9 +102,9 @@ async function viewLibrary(sortingMethod) {
 	setTimeout(() => mainMenu(), waitPeriod)
 }
 
-function run() {
-	mainMenu()
-}
+function createAccount() { }
+
+function rentBook() {}
 
 // Helpers //
 function prmpt(str) {
