@@ -1,19 +1,9 @@
-// Init //
-const EventEmitter = require("node:events");
-const ReadLine = require("node:readline");
-
-class MyEmitter extends EventEmitter {}
-const readLine = ReadLine.createInterface({input: process.stdin, output: process.stdout})
-const myEmitter = new MyEmitter();
-
-const menus = JSON.parse(JSON.stringify(require('./assets/data.json'))).menus
-const query = require('./assets/connection.js').query
+// Initialise //
 const waitPeriod = 3000
+const readLine = require("node:readline").createInterface({input: process.stdin, output: process.stdout})
+const query = require('./assets/connection.js').query
 
-myEmitter.on("menuChange", function() {
-	console.log("Menu Changed.")
-});
-
+// Program //
 try {
 	run()
 }
@@ -24,16 +14,31 @@ catch(error) {
 
 // Functions //
 async function mainMenu() {
-	let response, validInput = false, mainMenu = menus.find(menu => menu.name === "Main Menu")
+	let input = null, validInput = null, mainMenuTxt = ""
+
+	mainMenuTxt = 
+	"\nWelcome to the Library\n1. View library" + 
+	"\n2. Create account\n3. Rent a book" +
+	"\n4. View library by popularity\n5. Quit"+
+	"\n\n>> "
 
 	while(!validInput) {
-		response = await prompt(mainMenu.value)
-		response = parseInt(response)
-		validInput = validateInput(mainMenu.inputType, mainMenu.validInputs, response)
+		input = parseInt(await prmpt(mainMenuTxt))
+		if(isNaN(input)) {
+			validInput = false 
+			console.log("\n\nPlease select a numerical value\n\n")
+		}
+		else if(input <= 0 || input > 5) {
+			validInput = false 
+			console.log(`\nPlease select a numerical option within the range 1-5.\n`)
+		}
+		else {
+			validInput = true
+		}
 	}
 
 	// Valid input selected for Main Menu, proceed to next selected menu
-	switch(response) {
+	switch(input) {
 		case 1:				viewLibrary(); break; 
 		case 2:				break; // Create account
 		case 3:				break; // Rent book
@@ -47,7 +52,7 @@ async function viewLibrary(sortingMethod) {
 	let book = null
 	let books = null
 
-	let overallOutput = "\nThe Library"
+	let overallOutput = "\nTHE LIBRARY"
 	let bookOutput = "" 
 	let bookLines = ""
 
@@ -56,7 +61,7 @@ async function viewLibrary(sortingMethod) {
 	let padding = 0
 
 	if(sortingMethod === "popularity") {
-		overallOutput += "-> By Popularity\n\n"
+		overallOutput += "---> By Popularity\n\n"
 		books = await query("SELECT * FROM book ORDER BY rented DESC;") 
 	}
 	else {
@@ -98,29 +103,13 @@ function run() {
 }
 
 // Helpers //
-function prompt(str) {
+function prmpt(str) {
 	return new Promise(resolve => readLine.question(str, resolve))
 }
 
 function orderByLongest(strOne, strTwo) {
 	if(strOne.length > strTwo.length) 		return -1
-	if(strOne.length < strTwo.length) 		return 1
-	if(strOne.length === strTwo.length) 	return 0
-}
-
-function validateInput(inputType, validInputs, input) {
-	if(inputType === 'numerical-range') {
-		let max = validInputs.sort().reverse()[0]
-		if(isNaN(input)) {
-			console.log("\n\nPlease select a numerical value\n\n")
-			return false 
-		}
-		if(!validInputs.some(item => item == input)) {
-			console.log(`\nPlease select a numerical option within the range 1-${max}.\n`)
-			return false 
-		}
-	}
-
-	return true 
+	if(strOne.length < strTwo.length) 		return  1
+	if(strOne.length === strTwo.length) 	return  0
 }
 
