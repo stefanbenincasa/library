@@ -44,7 +44,7 @@ async function mainMenu() {
 	// Valid input selected for Main Menu, proceed to next selected menu
 	switch(input) {
 		case 1:				viewLibrary(); break; 
-		case 2:				break; // Create account
+		case 2:				createAccount(); break;
 		case 3:				break; // Rent book
 		case 4:				viewLibrary("popularity"); break;
 		case 5:				process.exit(1); break;
@@ -102,9 +102,25 @@ async function viewLibrary(sortingMethod) {
 	setTimeout(() => mainMenu(), waitPeriod)
 }
 
-function createAccount() { }
+async function createAccount() { 
+	let input = null, inputType = "first_name", creatingAccount = true, 
+	prmptTxt = firstName = lastName = homeAddress = ""
 
-function rentBook() {}
+	prmptTxt = 
+	"\nSome personal information is required to become a Member.\n" + 
+	"Would you like to proceed? Y/N\n" + ">> "
+
+	try {
+	}
+	catch(error) {
+		console.log(error.message)
+		setTimeout(() => mainMenu(), waitPeriod)
+	}
+}
+
+function rentBook() {
+
+}
 
 // Helpers //
 function prmpt(str) {
