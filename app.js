@@ -136,7 +136,6 @@ function numValidation(input, min, max) {
 }
 
 function strValidation(input, minLength, maxLength) {
-	if(typeof input !== 'string') throw new Error()
 	if(input.length < minLength) {
 		console.log(`\n\nInput too short. Provide input that has a minimum length of ${minLength}\n\n`)
 		return false
@@ -150,7 +149,6 @@ function strValidation(input, minLength, maxLength) {
 }
 
 function boolValidation(input) {
-	if(typeof input !== 'string') throw new Error("Application Error validating input.\n")
 	if((input.length !== 1) || (input.toUpperCase() !== "Y" && input.toUpperCase() !== "N")) {
 		console.log(`\n\nInput type invalid. Please input either a 'Y' or 'N' value.\n\n`)
 		return false
