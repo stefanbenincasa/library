@@ -55,7 +55,6 @@ async function identify() {
 
 		// Assume valid Member, set Member
 		member = response.rows[0]
-		console.log(member)
 	}
 }
 
