@@ -28,17 +28,7 @@ async function mainMenu() {
 
 	while(!validInput) {
 		input = parseInt(await prmpt(mainMenuTxt))
-		if(isNaN(input)) {
-			validInput = false 
-			console.log("\n\nPlease select a numerical value\n\n")
-		}
-		else if(input <= 0 || input > 5) {
-			validInput = false 
-			console.log(`\nPlease select a numerical option within the range 1-5.\n`)
-		}
-		else {
-			validInput = true
-		}
+		validInput = numValidation(input, 1, 5)
 	}
 
 	// Valid input selected for Main Menu, proceed to next selected menu
@@ -102,26 +92,6 @@ async function viewLibrary(sortingMethod) {
 	setTimeout(() => mainMenu(), waitPeriod)
 }
 
-async function createAccount() { 
-	let input = null, inputType = "first_name", creatingAccount = true, 
-	prmptTxt = firstName = lastName = homeAddress = ""
-
-	prmptTxt = 
-	"\nSome personal information is required to become a Member.\n" + 
-	"Would you like to proceed? Y/N\n" + ">> "
-
-	try {
-	}
-	catch(error) {
-		console.log(error.message)
-		setTimeout(() => mainMenu(), waitPeriod)
-	}
-}
-
-function rentBook() {
-
-}
-
 // Helpers //
 function prmpt(str) {
 	return new Promise(resolve => readLine.question(str, resolve))
@@ -131,5 +101,42 @@ function orderByLongest(strOne, strTwo) {
 	if(strOne.length > strTwo.length) 		return -1
 	if(strOne.length < strTwo.length) 		return  1
 	if(strOne.length === strTwo.length) 	return  0
+}
+
+function numValidation(input, min, max) {
+	if(isNaN(input)) {
+		console.log("\n\nPlease select a numerical value\n\n")
+		return false
+	}
+	else if(input < min || input > max) {
+		console.log(`\nPlease select a numerical option within the range ${min}-${max}.\n`)
+		return false
+	}
+
+	return true
+}
+
+function strValidation(input, minLength, maxLength) {
+	if(typeof input !== 'string') throw new Error()
+	if(input.length < minLength) {
+		console.log(`\n\nInput too short. Provide input that has a minimum length of ${minLength}\n\n`)
+		return false
+	}
+	if(input.length > maxLength) {
+		console.log(`\n\nInput too long. Provide input that has a maximum length of ${maxLength}\n\n`)
+		return false
+	}
+
+	return true
+}
+
+function boolValidation(input) {
+	if(typeof input !== 'string') throw new Error()
+	if(input.length !== 1) {
+		console.log(`\n\nInput length not equal to 1. Please input either a 'Y' or 'N' value.\n\n`)
+		return false
+	}
+
+	return true
 }
 
