@@ -14,7 +14,33 @@ catch(error) {
 
 // Functions //
 function run() {
+	identify()
 	mainMenu()
+}
+
+async function identify() {
+	let input = null, validInput = null, identifyTxt = ""
+
+	identifyTxt = "Welcome to the Library\nAre you an existing Member? [Y/N]\n>> "
+
+	try {
+		while(!validInput) {
+			input = await prmpt(identifyTxt)
+			validInput = boolValidation(input)
+		}
+
+		if(input === "Y") {
+
+		}
+		else {
+
+		}
+	}
+	catch(error) {
+		console.error(error.message)
+		console.log("Re-attempting to identify Member.")
+		setTimeout(() => identify(), waitPeriod)
+	}
 }
 
 async function mainMenu() {
@@ -131,9 +157,9 @@ function strValidation(input, minLength, maxLength) {
 }
 
 function boolValidation(input) {
-	if(typeof input !== 'string') throw new Error()
-	if(input.length !== 1) {
-		console.log(`\n\nInput length not equal to 1. Please input either a 'Y' or 'N' value.\n\n`)
+	if(typeof input !== 'string') throw new Error("Application Error validating input.\n")
+	if((input.length !== 1) || (input.toUpperCase() !== "Y" && input.toUpperCase() !== "N")) {
+		console.log(`\n\nInput type invalid. Please input either a 'Y' or 'N' value.\n\n`)
 		return false
 	}
 
