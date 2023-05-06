@@ -3,47 +3,72 @@ const waitPeriod = 3000
 const readLine = require("node:readline").createInterface({input: process.stdin, output: process.stdout})
 const query = require('./assets/connection.js').query
 
+let member = null
+
 // Program //
-try {
-	run()
-}
-catch(error) {
-	console.error(error.message)
-	console.error("Ending...END.")
-	process.exit()
-}
+run()
 
 // Functions //
 async function run() {
-	await identify()
-	mainMenu()
+	try {
+		await identify()
+		mainMenu()
+	}
+	catch(error) {
+		console.error(error.message)
+		console.error("Ending...END.")
+		process.exit()
+	}
 }
 
 async function identify() {
-	let input = null, validInput = null, identifyTxt = ""
+	let input = validInput = response = null, invalidCount = 0, identifyTxt = ""
 
+	// Initial boolean
 	identifyTxt = "\nWelcome to the Library\nAre you an existing Member? [Y/N]\n>> "
-
 	while(!validInput) {
 		input = await prmpt(identifyTxt)
 		validInput = boolValidation(input)
 	}
 
-	if(input === "Y") {
-	}
-	else {
-		
+	// Gather information and set global Member object
+	validInput = null
+	if(input.toUpperCase() === "Y") {
+
+		while(!validInput) {
+			if(invalidCount >= 3) throw new Error("Identification limit exceeded!")
+
+			input = await prmpt("\nMember ID: ")
+			validInput = numValidation(input, 1, 1000)
+			if(!validInput) {
+				invalidCount++
+				continue
+			}
+			
+			response = await query(`SELECT * FROM member WHERE member_id = $1 LIMIT 1;`, [input])	
+			if(response.rows.length === 0) {
+				console.log("\nNo Member found\n")
+				validInput = false
+				invalidCount++
+			}
+		}
+
+		// Assume valid Member, set Member
+		member = response.rows[0]
+		console.log(member)
 	}
 }
 
 async function mainMenu() {
-	let input = null, validInput = null, mainMenuTxt = ""
+	let input = null, validInput = null, mainMenuTxt = "", crtAcc = "Create account", rntBook = "Rent book"
 
 	mainMenuTxt = 
-	"\nWelcome to the Library\n1. View library" + 
-	"\n2. Create account\n3. Rent a book" +
-	"\n4. View library by popularity\n5. Quit"+
-	"\n\n>> "
+	"\nWelcome to the Library\n" + 
+	"1. View library\n" + 
+	`2. ${!member ? crtAcc : rntBook}\n` +
+	"3. View library by popularity\n" + 
+	"4. Quit\n\n" +
+	">> "
 
 	while(!validInput) {
 		input = parseInt(await prmpt(mainMenuTxt))
@@ -51,13 +76,22 @@ async function mainMenu() {
 	}
 
 	// Valid input selected for Main Menu, proceed to next selected menu
-	switch(input) {
-		case 1:				viewLibrary(); break; 
-		case 2:				createAccount(); break;
-		case 3:				break; // Rent book
-		case 4:				viewLibrary("popularity"); break;
-		case 5:				process.exit(1); break;
-		default:			throw new Error("\n\nApplication Error!\n END\n");
+	if(!member) {
+		switch(input) {
+			case 1:				viewLibrary(); break; 
+			case 2:				break; // Create account
+			case 3:				viewLibrary("popularity"); break;
+			case 4:				process.exit(1); break;
+			default:			throw new Error("\n\nApplication Error!\n END\n");
+		}
+	} else {
+		switch(input) {
+			case 1:				viewLibrary(); break; 
+			case 2:				break; // Rent book
+			case 3:				viewLibrary("popularity"); break;
+			case 4:				process.exit(1); break;
+			default:			throw new Error("\n\nApplication Error!\n END\n");
+		}
 	}
 }
 
@@ -149,6 +183,7 @@ function strValidation(input, minLength, maxLength) {
 }
 
 function boolValidation(input) {
+	input = String(input)
 	if((input.length !== 1) || (input.toUpperCase() !== "Y" && input.toUpperCase() !== "N")) {
 		console.log(`\n\nInput type invalid. Please input either a 'Y' or 'N' value.\n\n`)
 		return false
