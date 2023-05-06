@@ -9,37 +9,30 @@ try {
 }
 catch(error) {
 	console.error(error.message)
+	console.error("Ending...END.")
 	process.exit()
 }
 
 // Functions //
-function run() {
-	identify()
+async function run() {
+	await identify()
 	mainMenu()
 }
 
 async function identify() {
 	let input = null, validInput = null, identifyTxt = ""
 
-	identifyTxt = "Welcome to the Library\nAre you an existing Member? [Y/N]\n>> "
+	identifyTxt = "\nWelcome to the Library\nAre you an existing Member? [Y/N]\n>> "
 
-	try {
-		while(!validInput) {
-			input = await prmpt(identifyTxt)
-			validInput = boolValidation(input)
-		}
-
-		if(input === "Y") {
-
-		}
-		else {
-
-		}
+	while(!validInput) {
+		input = await prmpt(identifyTxt)
+		validInput = boolValidation(input)
 	}
-	catch(error) {
-		console.error(error.message)
-		console.log("Re-attempting to identify Member.")
-		setTimeout(() => identify(), waitPeriod)
+
+	if(input === "Y") {
+	}
+	else {
+		
 	}
 }
 
