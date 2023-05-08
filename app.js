@@ -15,8 +15,8 @@ async function run() {
 		mainMenu()
 	}
 	catch(error) {
-		console.error(error.message)
-		console.error("Ending...END.")
+		console.log(error.message)
+		console.log("Ending...END.")
 		process.exit()
 	}
 }
@@ -78,7 +78,7 @@ async function mainMenu() {
 	if(!member) {
 		switch(input) {
 			case 1:				viewLibrary(); break; 
-			case 2:				break; // Create account
+			case 2:				createAccount(); break;
 			case 3:				viewLibrary("popularity"); break;
 			case 4:				process.exit(1); break;
 			default:			throw new Error("\n\nApplication Error!\n END\n");
@@ -144,6 +144,69 @@ async function viewLibrary(sortingMethod) {
 	setTimeout(() => mainMenu(), waitPeriod)
 }
 
+// Functionality shared here with identify(), login should take place after signup
+async function createAccount() {
+	let validInput = null, invalidCount = 0, firstName = lastName = homeAddress = output = ""
+
+	output = "\nThank you for considering membership!\nWe require the following information to proceed: "
+	console.log(output)
+
+	while(!validInput) {
+		if(invalidCount >= 3) {
+			console.log("Maximum input errors exceeded! Returning to Main Menu...")
+			setTimeout(() => mainMenu(), waitPeriod)
+		  return	
+		}
+
+		output = "First Name: "
+		firstName = await prmpt(output)
+		validInput = strValidation(firstName, 1, 30) && !firstName.includes(" ")
+		if(!validInput) {
+			invalidCount++
+			console.log("\nInvalid [First Name]. Input length must be between 1 and 30 inclusive, without spaces.")
+			continue
+		}
+
+		output = "\nLast Name: "
+		lastName = await prmpt(output)
+		validInput = strValidation(lastName, 1, 30) && !lastName.includes(" ")
+		if(!validInput) {
+			invalidCount++
+			console.log("\nInvalid [Last Name]. Input length must be between 1 and 30 inclusive, without spaces.")
+			continue
+		}
+
+		output = "\nHome Address: "
+		homeAddress = await prmpt(output)
+		validInput = strValidation(homeAddress, 1, 50)
+		if(!validInput) {
+			invalidCount++
+			console.log("\nInvalid [Home Address]. Input length must be between 1 and 50 inclusive.")
+			continue
+		}
+	}
+
+	// Set Member for persistance and application
+	try {
+		let response = null, q = ""  
+
+		q = `INSERT INTO member(first_name, last_name, home_address) VALUES ($1, $2, $3) RETURNING member_id;`
+		response = await query(q, [firstName, lastName, homeAddress])	
+
+		q = `SELECT member_id FROM member WHERE member_id = $1;`
+		response = await query(q, [response.rows[0].member_id])	
+
+		if(response.rowCount != 1) throw Error()
+		member = { firstName, lastName, homeAddress }
+		console.log("New account created successfully!\nReturning to Main Menu...")	
+		setTimeout(() => mainMenu(), waitPeriod)
+	}
+	catch(error) {
+		console.log("Application error from creating new account!")
+		throw error
+	}
+}
+
 // Helpers //
 function prmpt(str) {
 	return new Promise(resolve => readLine.question(str, resolve))
@@ -157,11 +220,11 @@ function orderByLongest(strOne, strTwo) {
 
 function numValidation(input, min, max) {
 	if(isNaN(input)) {
-		console.log("\n\nPlease select a numerical value\n\n")
+		console.log("\n\nPlease select a numerical value")
 		return false
 	}
 	else if(input < min || input > max) {
-		console.log(`\nPlease select a numerical option within the range ${min}-${max}.\n`)
+		console.log(`\n\nPlease select a numerical option within the range ${min}-${max}.`)
 		return false
 	}
 
@@ -170,11 +233,11 @@ function numValidation(input, min, max) {
 
 function strValidation(input, minLength, maxLength) {
 	if(input.length < minLength) {
-		console.log(`\n\nInput too short. Provide input that has a minimum length of ${minLength}\n\n`)
+		console.log(`\n\nInput too short. Provide input that has a minimum length of ${minLength}`)
 		return false
 	}
 	if(input.length > maxLength) {
-		console.log(`\n\nInput too long. Provide input that has a maximum length of ${maxLength}\n\n`)
+		console.log(`\n\nInput too long. Provide input that has a maximum length of ${maxLength}`)
 		return false
 	}
 
@@ -184,7 +247,7 @@ function strValidation(input, minLength, maxLength) {
 function boolValidation(input) {
 	input = String(input)
 	if((input.length !== 1) || (input.toUpperCase() !== "Y" && input.toUpperCase() !== "N")) {
-		console.log(`\n\nInput type invalid. Please input either a 'Y' or 'N' value.\n\n`)
+		console.log(`\n\nInput type invalid. Please input either a 'Y' or 'N' value.`)
 		return false
 	}
 
