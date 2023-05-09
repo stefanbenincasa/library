@@ -146,7 +146,7 @@ async function viewLibrary(sortingMethod) {
 
 // Functionality shared here with identify(), login should take place after signup
 async function createAccount() {
-	let validInput = null, invalidCount = 0, firstName = lastName = homeAddress = output = ""
+	let input = validInput = null, invalidCount = 0, firstName = lastName = homeAddress = output = ""
 
 	output = "\nThank you for considering membership!\nWe require the following information to proceed: "
 	console.log(output)
@@ -158,31 +158,46 @@ async function createAccount() {
 		  return	
 		}
 
-		output = "First Name: "
-		firstName = await prmpt(output)
-		validInput = strValidation(firstName, 1, 30) && !firstName.includes(" ")
-		if(!validInput) {
-			invalidCount++
-			console.log("\nInvalid [First Name]. Input length must be between 1 and 30 inclusive, without spaces.")
-			continue
+		if(!firstName) {
+			output = "First Name: "
+			input = await prmpt(output)
+			validInput = input && strValidation(input, 1, 30) && !input.includes(" ")
+			if(!validInput) {
+				invalidCount++
+				console.log("\nInvalid [First Name]. Input length must be between 1 and 30 inclusive, without spaces.")
+				continue
+			}
+			else { 
+				firstName = input 
+			}
 		}
 
-		output = "\nLast Name: "
-		lastName = await prmpt(output)
-		validInput = strValidation(lastName, 1, 30) && !lastName.includes(" ")
-		if(!validInput) {
-			invalidCount++
-			console.log("\nInvalid [Last Name]. Input length must be between 1 and 30 inclusive, without spaces.")
-			continue
+		if(!lastName) {
+			output = "\nLast Name: "
+			input = await prmpt(output)
+			validInput = input && strValidation(input, 1, 30) && !input.includes(" ")
+			if(!validInput) {
+				invalidCount++
+				console.log("\nInvalid [Last Name]. Input length must be between 1 and 30 inclusive, without spaces.")
+				continue
+			}
+			else {
+				lastName = input
+			}
 		}
 
-		output = "\nHome Address: "
-		homeAddress = await prmpt(output)
-		validInput = strValidation(homeAddress, 1, 50)
-		if(!validInput) {
-			invalidCount++
-			console.log("\nInvalid [Home Address]. Input length must be between 1 and 50 inclusive.")
-			continue
+		if(!homeAddress) {
+			output = "\nHome Address: "
+			input = await prmpt(output)
+			validInput = input && strValidation(input, 1, 50)
+			if(!validInput) {
+				invalidCount++
+				console.log("\nInvalid [Home Address]. Input length must be between 1 and 50 inclusive.")
+				continue
+			}
+		}
+		else {
+			homeAddress = input
 		}
 	}
 
