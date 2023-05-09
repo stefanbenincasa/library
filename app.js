@@ -52,7 +52,12 @@ async function identify() {
 			}
 		}
 
-		member = response.rows[0]
+		member = { 
+			memberId: 			response.rows[0].member_id, 
+			firstName: 			response.rows[0].first_name,
+			lastName: 			response.rows[0].last_name,
+			homeAddress: 		response.rows[0].home_address
+		}
 	}
 }
 
@@ -112,6 +117,12 @@ async function viewLibrary(sortingMethod) {
 		books = await query("SELECT * FROM book;")
 	}
 
+	if(!books) {
+		throw new Error()
+		setTimeout(() => console.log("No books in Library found! Returning to Main Menu..."), waitPeriod / 2)
+		setTimeout(() => mainMenu(), waitPeriod)
+	}
+
 	fields = books.fields
 	longestColumnLength = fields.map(field => field.name).sort(orderByLongest)[0].length
 
@@ -155,7 +166,7 @@ async function createAccount() {
 		if(!firstName) {
 			output = "First Name: "
 			input = await prmpt(output)
-			validInput = input && strValidation(input, 1, 30) && !input.includes(" ")
+			validInput = strValidation(input, 1, 30) && !input.includes(" ")
 			if(!validInput) {
 				invalidCount++
 				console.log("\nInvalid [First Name]. Input length must be between 1 and 30 inclusive, without spaces.")
@@ -169,7 +180,7 @@ async function createAccount() {
 		if(!lastName) {
 			output = "\nLast Name: "
 			input = await prmpt(output)
-			validInput = input && strValidation(input, 1, 30) && !input.includes(" ")
+			validInput = strValidation(input, 1, 30) && !input.includes(" ")
 			if(!validInput) {
 				invalidCount++
 				console.log("\nInvalid [Last Name]. Input length must be between 1 and 30 inclusive, without spaces.")
@@ -183,36 +194,34 @@ async function createAccount() {
 		if(!homeAddress) {
 			output = "\nHome Address: "
 			input = await prmpt(output)
-			validInput = input && strValidation(input, 1, 50)
+			validInput = strValidation(input, 1, 50)
 			if(!validInput) {
 				invalidCount++
 				console.log("\nInvalid [Home Address]. Input length must be between 1 and 50 inclusive.")
 				continue
 			}
-		}
-		else {
-			homeAddress = input
+			else {
+				homeAddress = input
+			}
 		}
 	}
 
-	try {
-		let response = null, q = ""  
+	let response = null, q = ""  
 
-		q = `INSERT INTO member(first_name, last_name, home_address) VALUES ($1, $2, $3) RETURNING member_id;`
-		response = await query(q, [firstName, lastName, homeAddress])	
+	q = `INSERT INTO member(first_name, last_name, home_address) VALUES ($1, $2, $3) RETURNING member_id;`
+	response = await query(q, [firstName, lastName, homeAddress])	
 
-		q = `SELECT member_id FROM member WHERE member_id = $1;`
-		response = await query(q, [response.rows[0].member_id])	
+	q = `SELECT * FROM member WHERE member_id = $1;`
+	response = await query(q, [response.rows[0].member_id])	
 
-		if(response.rowCount != 1) throw Error()
-		member = { firstName, lastName, homeAddress }
-		console.log("New account created successfully!\nReturning to Main Menu...")	
+	if(response.rowCount != 1) {
+		console.log("Error creating new account! Returning to Main Menu...")
 		setTimeout(() => mainMenu(), waitPeriod)
 	}
-	catch(error) {
-		console.log("Error creating new account!")
-		throw error
-	}
+
+	member = { memberId: response.rows[0].member_id, firstName, lastName, homeAddress }
+	console.log("New account created successfully!\nReturning to Main Menu...")	
+	setTimeout(() => mainMenu(), waitPeriod)
 }
 
 // Insert record into Rental table, using an ISBN Lookup, and the current Member ID
@@ -278,8 +287,34 @@ async function rentBook() {
 		}
 	}
 
-	console.log("Title: ", title)
-	console.log("ISBN: ", isbn)
+	let response = searchDelay = null, q = ""
+	if(title) {
+		console.log(`Searching for Book by Title: ${title} ...`) 
+		searchDelay = new Promise((resolve, reject) => setTimeout(() => resolve(), waitPeriod))
+		await searchDelay
+
+		q = `SELECT * FROM book WHERE title = $1;`
+		response = await query(q, [title])
+		if(response.rows.length === 0) {
+			console.log(`Book[${title}] not found. Returning to Main Menu...`)
+			setTimeout(() => mainMenu(), waitPeriod)
+		} else {
+			q  = `INSERT INTO rental(book_id, member_id) VALUES ($1, $2) RETURNING *;`
+			response = await query(q, [response.rows[0].book_id, member.memberId])
+			if(response.rowCount !== 1) {
+				console.log("Error renting book! Returning to Main Menu...")
+				setTimeout(() => mainMenu(), waitPeriod)
+			}
+			else {
+				console.log(`Book[${title}], has been successfully rented! Returning to Main Menu...`)
+				setTimeout(() => mainMenu(), waitPeriod)
+			}
+		}
+	}
+
+	if(isbn) {
+
+	}
 }
 
 // Helpers //
