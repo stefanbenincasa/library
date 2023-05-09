@@ -294,6 +294,8 @@ function orderByLongest(strOne, strTwo) {
 }
 
 function numValidation(input, min, max) {
+	if(!input) return false
+
 	if(isNaN(input)) {
 		console.log("\n\nPlease select a numerical value")
 		return false
@@ -307,6 +309,8 @@ function numValidation(input, min, max) {
 }
 
 function strValidation(input, minLength, maxLength) {
+	if(!input) return false
+
 	if(input.length < minLength) {
 		console.log(`\n\nInput too short. Provide input that has a minimum length of ${minLength}`)
 		return false
@@ -320,6 +324,8 @@ function strValidation(input, minLength, maxLength) {
 }
 
 function boolValidation(input) {
+	if(!input) return false
+
 	input = String(input)
 	if((input.length !== 1) || (input.toUpperCase() !== "Y" && input.toUpperCase() !== "N")) {
 		console.log(`\n\nInput type invalid. Please input either a 'Y' or 'N' value.`)
