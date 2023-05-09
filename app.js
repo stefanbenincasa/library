@@ -15,6 +15,7 @@ async function run() {
 		mainMenu()
 	}
 	catch(error) {
+		console.log("\nApplication Error!");
 		console.log(error.message)
 		console.log("Ending...END.")
 		process.exit()
@@ -77,7 +78,7 @@ async function mainMenu() {
 			case 2:				createAccount(); break;
 			case 3:				viewLibrary("popularity"); break;
 			case 4:				process.exit(1); break;
-			default:			throw new Error("\n\nApplication Error!\n END\n");
+			default:			throw new Error();
 		}
 	} else {
 		switch(input) {
@@ -85,7 +86,7 @@ async function mainMenu() {
 			case 2:				rentBook(); break;
 			case 3:				viewLibrary("popularity"); break;
 			case 4:				process.exit(1); break;
-			default:			throw new Error("\n\nApplication Error!\n END\n");
+			default:			throw new Error();
 		}
 	}
 }
@@ -209,17 +210,76 @@ async function createAccount() {
 		setTimeout(() => mainMenu(), waitPeriod)
 	}
 	catch(error) {
-		console.log("Application error from creating new account!")
+		console.log("Error creating new account!")
 		throw error
 	}
 }
 
 // Insert record into Rental table, using an ISBN Lookup, and the current Member ID
 // Dual search options to be available, by Name, and by ISBN
-function rentBook() {
+async function rentBook() {
 	if(!member) throw new Error()
+	let input = validInput = null, invalidCount = 0, mode = title = isbn = output = ""
 
-		
+	output = "\nSelect your Rental Mode:\n1. Title\n2. ISBN\n>> "
+	while(!validInput) {
+		if(invalidCount >= 3) {
+			console.log("Maximum input errors exceeded! Returning to Main Menu...")
+			setTimeout(() => mainMenu(), waitPeriod)
+		  return	
+		}
+
+		if(!mode) {
+			input = await prmpt(output)
+			validInput = numValidation(input, 1, 2)
+			if(!validInput) {
+				invalidCount++
+				continue
+			}
+			else {
+				mode = parseInt(input)
+			}
+		}
+
+		switch(mode) {
+			case 1:					
+
+					output = "\nPlease enter the book Title: "
+					input = await prmpt(output)
+					validInput = strValidation(input, 1, 30)
+					if(!validInput) {
+						invalidCount++
+						continue
+					}
+					else {
+						title = input
+					}
+
+					break;
+
+			case 2:					
+
+					output = "\nPlease enter the book ISBN: "
+					input = await prmpt(output)
+					validInput = numValidation(input, 1, 13)
+					if(!validInput) {
+						invalidCount++
+						continue
+					}
+					else {
+						isbn = input
+					}
+
+					break;
+
+			default:				
+
+					throw new Error()
+		}
+	}
+
+	console.log("Title: ", title)
+	console.log("ISBN: ", isbn)
 }
 
 // Helpers //
