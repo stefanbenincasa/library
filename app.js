@@ -24,14 +24,12 @@ async function run() {
 async function identify() {
 	let input = validInput = response = null, invalidCount = 0, identifyTxt = ""
 
-	// Initial boolean
 	identifyTxt = "\nWelcome to the Library\nAre you an existing Member? [Y/N]\n>> "
 	while(!validInput) {
 		input = await prmpt(identifyTxt)
 		validInput = boolValidation(input)
 	}
 
-	// Gather information and set global Member object
 	validInput = null
 	if(input.toUpperCase() === "Y") {
 
@@ -53,7 +51,6 @@ async function identify() {
 			}
 		}
 
-		// Assume valid Member, set Member
 		member = response.rows[0]
 	}
 }
@@ -74,7 +71,6 @@ async function mainMenu() {
 		validInput = numValidation(input, 1, 5)
 	}
 
-	// Valid input selected for Main Menu, proceed to next selected menu
 	if(!member) {
 		switch(input) {
 			case 1:				viewLibrary(); break; 
@@ -86,7 +82,7 @@ async function mainMenu() {
 	} else {
 		switch(input) {
 			case 1:				viewLibrary(); break; 
-			case 2:				break; // Rent book
+			case 2:				rentBook(); break;
 			case 3:				viewLibrary("popularity"); break;
 			case 4:				process.exit(1); break;
 			default:			throw new Error("\n\nApplication Error!\n END\n");
@@ -135,16 +131,13 @@ async function viewLibrary(sortingMethod) {
 		bookOutput = bookLines = ""
 	}
 
-	// Final & print
 	overallOutput = overallOutput.substring(0, overallOutput.length - 1)
 	console.log(overallOutput)
 
-	// After N seconds return to Main Menu
 	setTimeout(() => console.log("Returning to Main Menu..."), waitPeriod / 2)
 	setTimeout(() => mainMenu(), waitPeriod)
 }
 
-// Functionality shared here with identify(), login should take place after signup
 async function createAccount() {
 	let input = validInput = null, invalidCount = 0, firstName = lastName = homeAddress = output = ""
 
@@ -201,7 +194,6 @@ async function createAccount() {
 		}
 	}
 
-	// Set Member for persistance and application
 	try {
 		let response = null, q = ""  
 
@@ -220,6 +212,14 @@ async function createAccount() {
 		console.log("Application error from creating new account!")
 		throw error
 	}
+}
+
+// Insert record into Rental table, using an ISBN Lookup, and the current Member ID
+// Dual search options to be available, by Name, and by ISBN
+function rentBook() {
+	if(!member) throw new Error()
+
+		
 }
 
 // Helpers //
