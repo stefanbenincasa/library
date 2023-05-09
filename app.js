@@ -270,7 +270,7 @@ async function rentBook() {
 
 					output = "\nPlease enter the book ISBN: "
 					input = await prmpt(output)
-					validInput = numValidation(input, 1, 13)
+					validInput = strValidation(input, 1, 13)
 					if(!validInput) {
 						invalidCount++
 						continue
@@ -287,33 +287,30 @@ async function rentBook() {
 		}
 	}
 
-	let response = searchDelay = null, q = ""
-	if(title) {
-		console.log(`Searching for Book by Title: ${title} ...`) 
-		searchDelay = new Promise((resolve, reject) => setTimeout(() => resolve(), waitPeriod))
-		await searchDelay
+	let response = searchDelay = book = null, q = "", 
+	term = { name: title ? "Title": "ISBN", value: title ? title : isbn  }
 
-		q = `SELECT * FROM book WHERE title = $1;`
-		response = await query(q, [title])
-		if(response.rows.length === 0) {
-			console.log(`Book[${title}] not found. Returning to Main Menu...`)
+	console.log(`...Searching for Book by ${term.name}: ${term.value}...`) 
+	searchDelay = new Promise((resolve, reject) => setTimeout(() => resolve(), waitPeriod))
+	await searchDelay
+
+	q = `SELECT * FROM book WHERE ${term.name.toLowerCase()} = $1;`
+	response = await query(q, [term.value])
+	if(response.rows.length === 0) {
+		console.log(`Book [${term.value}] not found. Returning to Main Menu...`)
+		setTimeout(() => mainMenu(), waitPeriod)
+	} else {
+		book = response.rows[0]
+		q  = `INSERT INTO rental(book_id, member_id) VALUES ($1, $2) RETURNING *;`
+		response = await query(q, [response.rows[0].book_id, member.memberId])
+		if(response.rowCount !== 1) {
+			console.log("Error renting book! Returning to Main Menu...")
 			setTimeout(() => mainMenu(), waitPeriod)
-		} else {
-			q  = `INSERT INTO rental(book_id, member_id) VALUES ($1, $2) RETURNING *;`
-			response = await query(q, [response.rows[0].book_id, member.memberId])
-			if(response.rowCount !== 1) {
-				console.log("Error renting book! Returning to Main Menu...")
-				setTimeout(() => mainMenu(), waitPeriod)
-			}
-			else {
-				console.log(`Book[${title}], has been successfully rented! Returning to Main Menu...`)
-				setTimeout(() => mainMenu(), waitPeriod)
-			}
 		}
-	}
-
-	if(isbn) {
-
+		else {
+			console.log(`Book [${book.title}], has been successfully rented! Returning to Main Menu...`)
+			setTimeout(() => mainMenu(), waitPeriod)
+		}
 	}
 }
 
