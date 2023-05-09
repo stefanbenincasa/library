@@ -225,7 +225,7 @@ async function createAccount() {
 }
 
 // Insert record into Rental table, using an ISBN Lookup, and the current Member ID
-// Dual search options to be available, by Name, and by ISBN
+// Dual search options to be available, by Title, and by ISBN
 async function rentBook() {
 	if(!member) throw new Error()
 	let input = validInput = null, invalidCount = 0, mode = title = isbn = output = ""
@@ -270,8 +270,9 @@ async function rentBook() {
 
 					output = "\nPlease enter the book ISBN: "
 					input = await prmpt(output)
-					validInput = strValidation(input, 1, 13)
+					validInput = strValidation(input, 13, 13)
 					if(!validInput) {
+						console.log("ISBN must be a 13 digit numerical string")
 						invalidCount++
 						continue
 					}
@@ -287,30 +288,42 @@ async function rentBook() {
 		}
 	}
 
-	let response = searchDelay = book = null, q = "", 
+	let response = searchDelay = book = null, q = condition = value = "", 
 	term = { name: title ? "Title": "ISBN", value: title ? title : isbn  }
 
-	console.log(`...Searching for Book by ${term.name}: ${term.value}...`) 
+	console.log(`Searching for Book by ${term.name}: ${term.value}...`) 
 	searchDelay = new Promise((resolve, reject) => setTimeout(() => resolve(), waitPeriod))
 	await searchDelay
 
-	q = `SELECT * FROM book WHERE ${term.name.toLowerCase()} = $1;`
+	condition = 
+		`${term.name === "Title" ? "UPPER(" + term.name.toLowerCase() + ")" : term.name.toLowerCase()} = ` +
+		`${term.name === "Title" ? "UPPER($1)" : "$1"}`
+
+	q = `SELECT * FROM book WHERE ${condition};` 
+
 	response = await query(q, [term.value])
 	if(response.rows.length === 0) {
 		console.log(`Book [${term.value}] not found. Returning to Main Menu...`)
 		setTimeout(() => mainMenu(), waitPeriod)
-	} else {
+		return
+	} 
+
+	try {
 		book = response.rows[0]
 		q  = `INSERT INTO rental(book_id, member_id) VALUES ($1, $2) RETURNING *;`
 		response = await query(q, [response.rows[0].book_id, member.memberId])
-		if(response.rowCount !== 1) {
-			console.log("Error renting book! Returning to Main Menu...")
-			setTimeout(() => mainMenu(), waitPeriod)
-		}
-		else {
-			console.log(`Book [${book.title}], has been successfully rented! Returning to Main Menu...`)
-			setTimeout(() => mainMenu(), waitPeriod)
-		}
+		if(response.rowCount !== 1) throw new Error()
+
+		q = `UPDATE book SET rented = rented + 1 WHERE book_id = $1 RETURNING *;`
+		response = await query(q, [book.book_id])
+		if(response.rowCount !== 1) throw new Error()
+
+		console.log(`Book [${book.title}], has been successfully rented! Returning to Main Menu...`)
+		setTimeout(() => mainMenu(), waitPeriod)
+	}
+	catch(error) {
+		console.log("Error renting book! Returning to Main Menu...")
+		setTimeout(() => mainMenu(), waitPeriod)
 	}
 }
 
