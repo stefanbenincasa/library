@@ -332,7 +332,22 @@ async function rentBook() {
 	}
 }
 
-function viewRentals() {}
+async function viewRentals() {
+	if(!member) throw new Error()
+
+	let response = rentals = null, q = output = ""
+
+	q = `
+		SELECT b.title, b.author, b.category, b.isbn
+		FROM rental r 
+			INNER JOIN member m ON r.member_id = m.member_id 
+			INNER JOIN book b ON r.book_id = b.book_id
+		WHERE r.member_id = $1;
+	`
+
+	response = await query(q, [member.memberId])	
+	output = "\nHere are your current Rentals:\n"
+}
 
 // Helpers //
 function prmpt(str) {
