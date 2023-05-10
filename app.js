@@ -62,14 +62,18 @@ async function identify() {
 }
 
 async function mainMenu() {
-	let input = null, validInput = null, mainMenuTxt = "", crtAcc = "Create account", rntBook = "Rent book"
+	let input = null, validInput = null, mainMenuTxt = dynamicTxt = "", listCount = 1
 
 	mainMenuTxt = 
-	"\nWelcome to the Library\n" + 
-	"1. View library\n" + 
-	`2. ${!member ? crtAcc : rntBook}\n` +
-	"3. View library by popularity\n" + 
-	"4. Quit\n\n" +
+	`\nWelcome to the Library\n` + `${listCount++}. View library\n`
+
+ 	dynamicTxt = 
+	member ? `${listCount++}. Rent book\n${listCount++}. View rentals\n` : `${listCount++}. Create account\n` 	
+
+	mainMenuTxt += 
+	dynamicTxt +
+	`${listCount++}. View library by popularity\n` + 
+	`${listCount++}. Quit\n\n` +
 	">> "
 
 	while(!validInput) {
@@ -79,18 +83,19 @@ async function mainMenu() {
 
 	if(!member) {
 		switch(input) {
-			case 1:				viewLibrary(); break; 
-			case 2:				createAccount(); break;
-			case 3:				viewLibrary("popularity"); break;
-			case 4:				process.exit(1); break;
+			case 1:				viewLibrary(); 							break; 
+			case 2:				createAccount(); 						break;
+			case 3:				viewLibrary("popularity"); 	break;
+			case 4:				process.exit(1); 						break;
 			default:			throw new Error();
 		}
 	} else {
 		switch(input) {
-			case 1:				viewLibrary(); break; 
-			case 2:				rentBook(); break;
-			case 3:				viewLibrary("popularity"); break;
-			case 4:				process.exit(1); break;
+			case 1:				viewLibrary(); 							break; 
+			case 2:				rentBook(); 								break;
+			case 3:				viewRentals(); 							break;
+			case 4:				viewLibrary("popularity"); 	break;
+			case 5:				process.exit(1); 						break;
 			default:			throw new Error();
 		}
 	}
@@ -296,8 +301,8 @@ async function rentBook() {
 	await searchDelay
 
 	condition = 
-		`${term.name === "Title" ? "UPPER(" + term.name.toLowerCase() + ")" : term.name.toLowerCase()} = ` +
-		`${term.name === "Title" ? "UPPER($1)" : "$1"}`
+	`${term.name === "Title" ? "UPPER(" + term.name.toLowerCase() + ")" : term.name.toLowerCase()} = ` +
+	`${term.name === "Title" ? "UPPER($1)" : "$1"}`
 
 	q = `SELECT * FROM book WHERE ${condition};` 
 
@@ -326,6 +331,8 @@ async function rentBook() {
 		setTimeout(() => mainMenu(), waitPeriod)
 	}
 }
+
+function viewRentals() {}
 
 // Helpers //
 function prmpt(str) {
