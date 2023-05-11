@@ -102,56 +102,28 @@ async function mainMenu() {
 }
 
 async function viewLibrary(sortingMethod) {
-	let book = null
-	let books = null
+	let books = response = null
 
-	let overallOutput = "\nTHE LIBRARY"
-	let bookOutput = "" 
-	let bookLines = ""
-
-	let fields = null
-	let longestColumnLength = null
-	let padding = 0
-
+	console.log("\nTHE LIBRARY")
 	if(sortingMethod === "popularity") {
-		overallOutput += "---> By Popularity\n\n"
-		books = await query("SELECT * FROM book ORDER BY rented DESC;") 
+		console.log("---> By Popularity\n\n")
+		response = await query("SELECT * FROM book ORDER BY rented DESC;") 
 	}
 	else {
-		overallOutput += "\n\n"
-		books = await query("SELECT * FROM book;")
+		console.log("\n\n")
+		response = await query("SELECT * FROM book;")
 	}
 
-	if(!books) {
+	if(response.rows.length === 0) {
 		throw new Error()
 		setTimeout(() => console.log("No books in Library found! Returning to Main Menu..."), waitPeriod / 2)
 		setTimeout(() => mainMenu(), waitPeriod)
 	}
+	
+	books = response.rows
+	for(let i = 0; i < books.length; i++) printFormattedObj(books[i], ["book_id"])
 
-	fields = books.fields
-	longestColumnLength = fields.map(field => field.name).sort(orderByLongest)[0].length
-
-	for(let i = 0; i < books.rows.length; i++) { 
-		book = books.rows[i]	
-
-		// Cycle through column names for current book & calculate necessary padding
-		for(let j = 1; j < fields.length; j++) { // Exclude column BookID; j = 1
-			bookLines += fields[j].name.toUpperCase()
-			padding = longestColumnLength - fields[j].name.length	
-			for(let k = 0; k < padding; k++) bookLines += " "
-			bookLines += `\t\t\t${book[fields[j].name]}\n`
-		}
-		
-		// Append to final output & reset
-		bookOutput += bookLines + "\n"
-		overallOutput += bookOutput
-		bookOutput = bookLines = ""
-	}
-
-	overallOutput = overallOutput.substring(0, overallOutput.length - 1)
-	console.log(overallOutput)
-
-	setTimeout(() => console.log("Returning to Main Menu..."), waitPeriod / 2)
+	console.log("Returning to Main Menu...")
 	setTimeout(() => mainMenu(), waitPeriod)
 }
 
@@ -335,7 +307,7 @@ async function rentBook() {
 async function viewRentals() {
 	if(!member) throw new Error()
 
-	let response = rentals = null, q = output = ""
+	let response = rentals = null, q = ""
 
 	q = `
 		SELECT b.title, b.author, b.category, b.isbn
@@ -346,7 +318,18 @@ async function viewRentals() {
 	`
 
 	response = await query(q, [member.memberId])	
-	output = "\nHere are your current Rentals:\n"
+	if(response.rows.length === 0) {
+		console.log("No rentals found! Returning to Main Menu...")
+		setTimeout(() => mainMenu(), waitPeriod)
+		return
+	}
+	
+	rentals = response.rows
+	console.log("\nHere are your current Rentals:\n")
+	for(let i = 0; i < rentals.length; i++) printFormattedObj(rentals[i], ["book_id"])
+
+	setTimeout(() => console.log("Returning to Main Menu..."), waitPeriod / 2)
+	setTimeout(() => mainMenu(), waitPeriod)
 }
 
 // Helpers //
@@ -358,6 +341,23 @@ function orderByLongest(strOne, strTwo) {
 	if(strOne.length > strTwo.length) 		return -1
 	if(strOne.length < strTwo.length) 		return  1
 	if(strOne.length === strTwo.length) 	return  0
+}
+
+// For object-array that has identical keys, print fixed amount of tabs from an anchor point
+function printFormattedObj(obj, ignoreValues = []) {
+	let fields = longestKey = null, output = ""
+
+	fields = Object.keys(obj).filter(item => !ignoreValues.some(value => item == value)) // Ignored values removed first
+	longestKey = [...fields].sort(orderByLongest)[0].length // New array used to avoid altering 'fields' in-place 
+
+	for(let a = 0; a < fields.length; a++) {
+		output += fields[a].toUpperCase()
+		padding = longestKey - fields[a].length   
+		for(let b = 0; b < padding; b++) output += " "
+		output += `\t\t\t${obj[fields[a]]}\n`	
+	}
+
+	console.log(output)
 }
 
 function numValidation(input, min, max) {
