@@ -13,7 +13,9 @@ BEGIN;
 		Member_ID        SERIAL PRIMARY KEY,
 		First_Name       VARCHAR(40) NOT NULL,
 		Last_Name        VARCHAR(40) NOT NULL,
-		Home_Address     VARCHAR(40) NOT NULL
+		Home_Address     VARCHAR(40) NOT NULL,
+		Username				 VARCHAR(40) NOT NULL,
+		Password				 VARCHAR(25) NOT NULL
 	);
 
 	CREATE TABLE Rental ( 
