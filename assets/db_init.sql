@@ -1,4 +1,8 @@
-BEGIN;
+DO $$
+<<first_block>>
+
+BEGIN
+	
 
 	CREATE TABLE Book (
 		Book_ID         SERIAL PRIMARY KEY,
@@ -24,6 +28,7 @@ BEGIN;
 		PRIMARY KEY(Member_ID, Book_ID)
 	);
 
+
 	INSERT INTO Book(Title, Author, Category, ISBN) 
 	VALUES ('To Kill A Mockingbird', 'Harper Lee', 'Fiction', '9780060935467');
 
@@ -42,9 +47,13 @@ BEGIN;
 	INSERT INTO Book(Title, Author, Category, ISBN) 
 	VALUES ('The Silmarillion', 'J.R.R Tolkien', 'Fiction', '9780008537890');
 
-	INSERT INTO Member(First_Name, Last_Name, Home_Address)
-	VALUES ('Stefan', 'Benincasa', '123 Fake Street');
 
-COMMIT;
-END;
+	INSERT INTO Member(First_Name, Last_Name, Home_Address, Username, Password)
+	VALUES ('Stefan', 'Benincasa', '123 Fake Street', 'stefanbenin', '1234');
+
+
+	EXCEPTION WHEN SQLSTATE '23000' THEN 
+		RAISE EXCEPTION 'Error in table creation!';
+
+END first_block $$;
 
