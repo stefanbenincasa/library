@@ -45,22 +45,22 @@ async function identify() {
 				}
 				else {
 					username = input
+					response = await query(`SELECT * FROM member WHERE username = $1 LIMIT 1;`, [username])	
+					if(response.rows.length === 0) {
+						console.log("\nNo Member found\n")
+						validInput = false
+						invalidCount++
+						username = null
+						continue
+					}
 				}
-			}
-
-			response = await query(`SELECT * FROM member WHERE username = $1 LIMIT 1;`, [username])	
-			if(response.rows.length === 0) {
-				console.log("\nNo Member found\n")
-				validInput = false
-				invalidCount++
-				username = null
-				continue
 			}
 
 			if(!password) {
 				input = await prmpt("Password: ")
 				validInput = strValidation(input, 1, 25)
 				if(!validInput) {
+					console.log("\nInvalid password! Try again.\n")
 					invalidCount++
 					continue
 				}
@@ -68,14 +68,15 @@ async function identify() {
 					password = input
 				}
 			}
-			
-			response = await query(`SELECT * FROM member WHERE username = $1 AND password = $2 LIMIT 1;`, [username, password])	
-			if(response.rows.length === 0) {
-				console.log("\nInvalid password! Try again.\n")
-				validInput = false
-				invalidCount++
-				username = null
-				password = null
+
+			if(username && password) {
+				response = await query(`SELECT * FROM member WHERE username = $1 AND password = $2 LIMIT 1;`, [username, password])	
+				if(response.rows.length === 0) {
+					console.log("\nInvalid password! Try again.\n")
+					validInput = false
+					invalidCount++
+					password = null
+				}
 			}
 		}
 
@@ -86,6 +87,7 @@ async function identify() {
 			homeAddress: 		response.rows[0].home_address,
 			username:				response.rows[0].username
 		}
+
 	}
 }
 
@@ -156,13 +158,15 @@ async function viewLibrary(sortingMethod) {
 }
 
 async function createAccount() {
-	let input = validInput = null, invalidCount = 0, firstName = lastName = homeAddress = username = password = output = ""
+	let input = validInput = null, invalidCount = 0, 
+	addressRegex = new RegExp(/^([0-9]{1,8}) ([A-Za-z]{1,16}) ([A-Za-z]{1,16})$/),
+	firstName = lastName = homeAddress = username = password = output = ""
 
 	output = "\nThank you for considering membership!\nWe require the following information to proceed: "
 	console.log(output)
 
 	while(!validInput) {
-		if(invalidCount >= 3) {
+		if(invalidCount >= 100) {
 			console.log("Maximum input errors exceeded! Returning to Main Menu...")
 			setTimeout(() => mainMenu(), waitPeriod)
 		  return	
@@ -199,10 +203,10 @@ async function createAccount() {
 		if(!homeAddress) {
 			output = "\nHome Address: "
 			input = await prmpt(output)
-			validInput = strValidation(input, 1, 40)
+			validInput = addressRegex.test(input)
 			if(!validInput) {
 				invalidCount++
-				console.log("\nInvalid [Home Address]. Input length must be between 1 and 40 inclusive.")
+				console.log(`\nInvalid [Home Address]. The format "[0-9]{1,9} [a-zA-Z]{1,16} [a-zA-Z]{1,16}" is required.`) 
 				continue
 			}
 			else {
@@ -435,9 +439,7 @@ function numValidation(input, min, max) {
 }
 
 function strValidation(input, minLength, maxLength) {
-	if(!input) return false
-
-	if(input.length < minLength) {
+	if(!input || input.length < minLength) {
 		console.log(`\n\nInput too short. Provide input that has a minimum length of ${minLength}`)
 		return false
 	}
