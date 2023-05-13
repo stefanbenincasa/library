@@ -23,11 +23,10 @@ async function run() {
 }
 
 async function identify() {
-	let input = validInput = response = null, invalidCount = 0, identifyTxt = ""
+	let input = validInput = response = username = password = null, invalidCount = 0
 
-	identifyTxt = "\nWelcome to the Library\nAre you an existing Member? [Y/N]\n>> "
 	while(!validInput) {
-		input = await prmpt(identifyTxt)
+		input = await prmpt("\nWelcome to the Library\nAre you an existing Member? [Y/N]\n>> ")
 		validInput = boolValidation(input)
 	}
 
@@ -37,18 +36,46 @@ async function identify() {
 		while(!validInput) {
 			if(invalidCount >= 3) throw new Error("Identification limit exceeded!")
 
-			input = await prmpt("\nMember ID: ")
-			validInput = numValidation(input, 1, 1000)
-			if(!validInput) {
-				invalidCount++
-				continue
+			if(!username) {
+				input = await prmpt("\nUsername: ")
+				validInput = strValidation(input, 1, 40)
+				if(!validInput) {
+					invalidCount++
+					continue
+				}
+				else {
+					username = input
+				}
 			}
-			
-			response = await query(`SELECT * FROM member WHERE member_id = $1 LIMIT 1;`, [input])	
+
+			response = await query(`SELECT * FROM member WHERE username = $1 LIMIT 1;`, [username])	
 			if(response.rows.length === 0) {
 				console.log("\nNo Member found\n")
 				validInput = false
 				invalidCount++
+				username = null
+				continue
+			}
+
+			if(!password) {
+				input = await prmpt("Password: ")
+				validInput = strValidation(input, 1, 25)
+				if(!validInput) {
+					invalidCount++
+					continue
+				}
+				else {
+					password = input
+				}
+			}
+			
+			response = await query(`SELECT * FROM member WHERE username = $1 AND password = $2 LIMIT 1;`, [username, password])	
+			if(response.rows.length === 0) {
+				console.log("\nInvalid password! Try again.\n")
+				validInput = false
+				invalidCount++
+				username = null
+				password = null
 			}
 		}
 
@@ -56,7 +83,8 @@ async function identify() {
 			memberId: 			response.rows[0].member_id, 
 			firstName: 			response.rows[0].first_name,
 			lastName: 			response.rows[0].last_name,
-			homeAddress: 		response.rows[0].home_address
+			homeAddress: 		response.rows[0].home_address,
+			username:				response.rows[0].username
 		}
 	}
 }
@@ -128,7 +156,7 @@ async function viewLibrary(sortingMethod) {
 }
 
 async function createAccount() {
-	let input = validInput = null, invalidCount = 0, firstName = lastName = homeAddress = output = ""
+	let input = validInput = null, invalidCount = 0, firstName = lastName = homeAddress = username = password = output = ""
 
 	output = "\nThank you for considering membership!\nWe require the following information to proceed: "
 	console.log(output)
@@ -143,10 +171,10 @@ async function createAccount() {
 		if(!firstName) {
 			output = "First Name: "
 			input = await prmpt(output)
-			validInput = strValidation(input, 1, 30) && !input.includes(" ")
+			validInput = strValidation(input, 1, 40) && !input.includes(" ")
 			if(!validInput) {
 				invalidCount++
-				console.log("\nInvalid [First Name]. Input length must be between 1 and 30 inclusive, without spaces.")
+				console.log("\nInvalid [First Name]. Input length must be between 1 and 40 inclusive, without spaces.")
 				continue
 			}
 			else { 
@@ -157,10 +185,10 @@ async function createAccount() {
 		if(!lastName) {
 			output = "\nLast Name: "
 			input = await prmpt(output)
-			validInput = strValidation(input, 1, 30) && !input.includes(" ")
+			validInput = strValidation(input, 1, 40) && !input.includes(" ")
 			if(!validInput) {
 				invalidCount++
-				console.log("\nInvalid [Last Name]. Input length must be between 1 and 30 inclusive, without spaces.")
+				console.log("\nInvalid [Last Name]. Input length must be between 1 and 40 inclusive, without spaces.")
 				continue
 			}
 			else {
@@ -171,24 +199,55 @@ async function createAccount() {
 		if(!homeAddress) {
 			output = "\nHome Address: "
 			input = await prmpt(output)
-			validInput = strValidation(input, 1, 50)
+			validInput = strValidation(input, 1, 40)
 			if(!validInput) {
 				invalidCount++
-				console.log("\nInvalid [Home Address]. Input length must be between 1 and 50 inclusive.")
+				console.log("\nInvalid [Home Address]. Input length must be between 1 and 40 inclusive.")
 				continue
 			}
 			else {
 				homeAddress = input
 			}
 		}
+
+		if(!username) {
+			output = "\nUsername: "
+			input = await prmpt(output)
+			validInput = strValidation(input, 1, 40) && !input.includes(" ")
+			if(!validInput) {
+				invalidCount++
+				console.log("\nInvalid [Username]. Input length must be between 1 and 40 inclusive, without spaces.")
+				continue
+			}
+			else {
+				username = input
+			}
+		}
+
+		if(!password) {
+			output = "\nPassword: "
+			input = await prmpt(output)
+			validInput = strValidation(input, 1, 25) && !input.includes(" ")
+			if(!validInput) {
+				invalidCount++
+				console.log("\nInvalid [Password]. Input length must be between 1 and 25 inclusive, without spaces.")
+				continue
+			}
+			else {
+				password = input
+			}
+		}
 	}
 
 	let response = null, q = ""  
 
-	q = `INSERT INTO member(first_name, last_name, home_address) VALUES ($1, $2, $3) RETURNING member_id;`
-	response = await query(q, [firstName, lastName, homeAddress])	
+	q = `INSERT INTO member(first_name, last_name, home_address, username, password) ` +
+	`VALUES ($1, $2, $3, $4, $5) RETURNING member_id;`
+
+	response = await query(q, [firstName, lastName, homeAddress, username, password])	
 
 	q = `SELECT * FROM member WHERE member_id = $1;`
+
 	response = await query(q, [response.rows[0].member_id])	
 
 	if(response.rowCount != 1) {
@@ -196,7 +255,7 @@ async function createAccount() {
 		setTimeout(() => mainMenu(), waitPeriod)
 	}
 
-	member = { memberId: response.rows[0].member_id, firstName, lastName, homeAddress }
+	member = { memberId: response.rows[0].member_id, firstName, lastName, homeAddress, username}
 	console.log("New account created successfully!\nReturning to Main Menu...")	
 	setTimeout(() => mainMenu(), waitPeriod)
 }
@@ -268,7 +327,7 @@ async function rentBook() {
 	let response = searchDelay = book = null, q = condition = value = "", 
 	term = { name: title ? "Title": "ISBN", value: title ? title : isbn  }
 
-	console.log(`Searching for Book by ${term.name}: ${term.value}...`) 
+	console.log(`Searching for Book by ${term.name}: ${term.value}`) 
 	searchDelay = new Promise((resolve, reject) => setTimeout(() => resolve(), waitPeriod))
 	await searchDelay
 
