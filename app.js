@@ -159,7 +159,7 @@ async function viewLibrary(sortingMethod) {
 
 async function createAccount() {
 	let input = validInput = null, invalidCount = 0, 
-	addressRegex = new RegExp(/^([0-9]{1,8}) ([A-Za-z]{1,16}) ([A-Za-z]{1,16})$/),
+	tempRegex = /^([0-9]{1,8}) ([A-Za-z\\']{1,16}) ([A-Za-z]{1,16})$/, addressRegex = new RegExp(tempRegex),
 	firstName = lastName = homeAddress = username = password = output = ""
 
 	output = "\nThank you for considering membership!\nWe require the following information to proceed: "
@@ -206,7 +206,7 @@ async function createAccount() {
 			validInput = addressRegex.test(input)
 			if(!validInput) {
 				invalidCount++
-				console.log(`\nInvalid [Home Address]. The format "[0-9]{1,9} [a-zA-Z]{1,16} [a-zA-Z]{1,16}" is required.`) 
+				console.log(`\nInvalid [Home Address]. The format "[0-9]{1,8} [a-zA-Z']{1,16} [a-zA-Z]{1,16}" is required.`) 
 				continue
 			}
 			else {
