@@ -175,7 +175,7 @@ async function createAccount() {
 		if(!firstName) {
 			output = "First Name: "
 			input = await prmpt(output)
-			validInput = strValidation(input, 1, 40) && !input.includes(" ")
+			validInput = strValidation(input, 1, 40, false) && !input.includes(" ")
 			if(!validInput) {
 				invalidCount++
 				console.log("\nInvalid [First Name]. Input length must be between 1 and 40 inclusive, without spaces.")
@@ -189,7 +189,7 @@ async function createAccount() {
 		if(!lastName) {
 			output = "\nLast Name: "
 			input = await prmpt(output)
-			validInput = strValidation(input, 1, 40) && !input.includes(" ")
+			validInput = strValidation(input, 1, 40, false) && !input.includes(" ")
 			if(!validInput) {
 				invalidCount++
 				console.log("\nInvalid [Last Name]. Input length must be between 1 and 40 inclusive, without spaces.")
@@ -217,7 +217,7 @@ async function createAccount() {
 		if(!username) {
 			output = "\nUsername: "
 			input = await prmpt(output)
-			validInput = strValidation(input, 1, 40) && !input.includes(" ")
+			validInput = strValidation(input, 1, 40, false) && !input.includes(" ")
 			if(!validInput) {
 				invalidCount++
 				console.log("\nInvalid [Username]. Input length must be between 1 and 40 inclusive, without spaces.")
@@ -231,7 +231,7 @@ async function createAccount() {
 		if(!password) {
 			output = "\nPassword: "
 			input = await prmpt(output)
-			validInput = strValidation(input, 1, 25) && !input.includes(" ")
+			validInput = strValidation(input, 1, 25, false) && !input.includes(" ")
 			if(!validInput) {
 				invalidCount++
 				console.log("\nInvalid [Password]. Input length must be between 1 and 25 inclusive, without spaces.")
@@ -310,7 +310,7 @@ async function rentBook() {
 
 					output = "\nPlease enter the book ISBN: "
 					input = await prmpt(output)
-					validInput = strValidation(input, 13, 13)
+					validInput = strValidation(input, 13, 13, false)
 					if(!validInput) {
 						console.log("ISBN must be a 13 digit numerical string")
 						invalidCount++
@@ -423,43 +423,65 @@ function printFormattedObj(obj, ignoreValues = []) {
 	console.log(output)
 }
 
-function numValidation(input, min, max) {
-	if(!input) return false
+function numValidation(input, min = 0, max = 0, printMessage = true) {
+	let isValid = null
 
-	if(isNaN(input)) {
-		console.log("\n\nPlease select a numerical value")
-		return false
+	if(max < min || min < 0 || max < 0) throw new Error()
+
+	if(!input) {
+		printMessage && console.log("\n\nPlease select a numerical value")
+		isValid = false 
 	}
 	else if(input < min || input > max) {
-		console.log(`\n\nPlease select a numerical option within the range ${min}-${max}.`)
-		return false
+		printMessage && console.log(`\n\nPlease select a numerical option within the range ${min}-${max}.`)
+		isValid = false 
+	}
+	else {
+		isValid = true
 	}
 
-	return true
+	return isValid 
 }
 
-function strValidation(input, minLength, maxLength) {
-	if(!input || input.length < minLength) {
-		console.log(`\n\nInput too short. Provide input that has a minimum length of ${minLength}`)
-		return false
+function strValidation(input, minLength = 0, maxLength = 0, printMessage = true) {
+	let isValid = null
+
+	if(minLength < minLength || minLength < 0 || maxLength < 0) throw new Error()
+
+	if(!input) {
+		isValid = false
 	}
-	if(input.length > maxLength) {
-		console.log(`\n\nInput too long. Provide input that has a maximum length of ${maxLength}`)
-		return false
+	else if(input.length < minLength) {
+		printMessage && console.log(`\n\nInput too short. Provide input that has a minimum length of ${minLength}`)
+		isValid = false 
+	}
+	else if(input.length > maxLength) {
+		printMessage && console.log(`\n\nInput too long. Provide input that has a maximum length of ${maxLength}`)
+		isValid = false 
+	}
+	else {
+		isValid = true
 	}
 
-	return true
+	return isValid
 }
 
-function boolValidation(input) {
-	if(!input) return false
+function boolValidation(input, printMessage = true) {
+	let isValid = null
 
-	input = String(input)
-	if((input.length !== 1) || (input.toUpperCase() !== "Y" && input.toUpperCase() !== "N")) {
-		console.log(`\n\nInput type invalid. Please input either a 'Y' or 'N' value.`)
-		return false
+	if(typeof input !== "string") throw new Error()
+
+	if(!input) {
+		isValid = false
+	} 
+	else if((input.length !== 1) || (input.toUpperCase() !== "Y" && input.toUpperCase() !== "N")) {
+		printMessage && console.log(`\n\nInput type invalid. Please input either a 'Y' or 'N' value.`)
+		isValid = false
+	}
+	else {
+		isValid = true
 	}
 
-	return true
+	return isValid
 }
 
