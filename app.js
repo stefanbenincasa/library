@@ -47,7 +47,7 @@ async function identify() {
 					username = input
 					response = await query(`SELECT * FROM member WHERE username = $1 LIMIT 1;`, [username])	
 					if(response.rows.length === 0) {
-						console.log("\nNo Member found\n")
+						console.log("\nNo Member found")
 						validInput = false
 						invalidCount++
 						username = null
@@ -60,7 +60,7 @@ async function identify() {
 				input = await prmpt("Password: ")
 				validInput = strValidation(input, 1, 25)
 				if(!validInput) {
-					console.log("\nInvalid password! Try again.\n")
+					console.log("\nInvalid password! Try again.")
 					invalidCount++
 					continue
 				}
@@ -72,7 +72,7 @@ async function identify() {
 			if(username && password) {
 				response = await query(`SELECT * FROM member WHERE username = $1 AND password = $2 LIMIT 1;`, [username, password])	
 				if(response.rows.length === 0) {
-					console.log("\nInvalid password! Try again.\n")
+					console.log("\nInvalid password! Try again.")
 					validInput = false
 					invalidCount++
 					password = null
@@ -167,13 +167,13 @@ async function createAccount() {
 
 	while(!validInput) {
 		if(invalidCount >= 100) {
-			console.log("Maximum input errors exceeded! Returning to Main Menu...")
+			console.log("\nMaximum input errors exceeded! Returning to Main Menu...")
 			setTimeout(() => mainMenu(), waitPeriod)
 		  return	
 		}
 
 		if(!firstName) {
-			output = "First Name: "
+			output = "\nFirst Name: "
 			input = await prmpt(output)
 			validInput = strValidation(input, 1, 40, false) && !input.includes(" ")
 			if(!validInput) {
@@ -255,12 +255,12 @@ async function createAccount() {
 	response = await query(q, [response.rows[0].member_id])	
 
 	if(response.rowCount != 1) {
-		console.log("Error creating new account! Returning to Main Menu...")
+		console.log("\nError creating new account! Returning to Main Menu...")
 		setTimeout(() => mainMenu(), waitPeriod)
 	}
 
 	member = { memberId: response.rows[0].member_id, firstName, lastName, homeAddress, username}
-	console.log("New account created successfully!\nReturning to Main Menu...")	
+	console.log("\nNew account created successfully! Returning to Main Menu...")	
 	setTimeout(() => mainMenu(), waitPeriod)
 }
 
@@ -273,7 +273,7 @@ async function rentBook() {
 	output = "\nSelect your Rental Mode:\n1. Title\n2. ISBN\n>> "
 	while(!validInput) {
 		if(invalidCount >= 3) {
-			console.log("Maximum input errors exceeded! Returning to Main Menu...")
+			console.log("\nMaximum input errors exceeded! Returning to Main Menu...")
 			setTimeout(() => mainMenu(), waitPeriod)
 		  return	
 		}
@@ -312,7 +312,7 @@ async function rentBook() {
 					input = await prmpt(output)
 					validInput = strValidation(input, 13, 13, false)
 					if(!validInput) {
-						console.log("ISBN must be a 13 digit numerical string")
+						console.log("\nISBN must be a 13 digit numerical string")
 						invalidCount++
 						continue
 					}
@@ -331,7 +331,7 @@ async function rentBook() {
 	let response = searchDelay = book = null, q = condition = value = "", 
 	term = { name: title ? "Title": "ISBN", value: title ? title : isbn  }
 
-	console.log(`Searching for Book by ${term.name}: ${term.value}`) 
+	console.log(`\nSearching for Book by ${term.name}: ${term.value}`) 
 	searchDelay = new Promise((resolve, reject) => setTimeout(() => resolve(), waitPeriod))
 	await searchDelay
 
@@ -358,11 +358,11 @@ async function rentBook() {
 		response = await query(q, [book.book_id])
 		if(response.rowCount !== 1) throw new Error()
 
-		console.log(`Book [${book.title}], has been successfully rented! Returning to Main Menu...`)
+		console.log(`\nBook [${book.title}], has been successfully rented! Returning to Main Menu...`)
 		setTimeout(() => mainMenu(), waitPeriod)
 	}
 	catch(error) {
-		console.log("Error renting book! Returning to Main Menu...")
+		console.log("\nError renting book! Returning to Main Menu...")
 		setTimeout(() => mainMenu(), waitPeriod)
 	}
 }
@@ -382,7 +382,7 @@ async function viewRentals() {
 
 	response = await query(q, [member.memberId])	
 	if(response.rows.length === 0) {
-		console.log("No rentals found! Returning to Main Menu...")
+		console.log("\nNo rentals found! Returning to Main Menu...")
 		setTimeout(() => mainMenu(), waitPeriod)
 		return
 	}
@@ -391,7 +391,7 @@ async function viewRentals() {
 	console.log("\nHere are your current Rentals:\n")
 	for(let i = 0; i < rentals.length; i++) printFormattedObj(rentals[i], ["book_id"])
 
-	setTimeout(() => console.log("Returning to Main Menu..."), waitPeriod / 2)
+	setTimeout(() => console.log("\nReturning to Main Menu..."), waitPeriod / 2)
 	setTimeout(() => mainMenu(), waitPeriod)
 }
 
